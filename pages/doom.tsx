@@ -4,8 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Web3Modal from "web3modal";
 import { abi, NFT_CONTRACT_ADDRESS } from "../constants";
 import styles from "../styles/Home.module.css";
+import type { NextPage } from "next";
 
-export default function Home() {
+const Home: NextPage = () => {
   // walletConnected keep track of whether the user's wallet is connected or not
   const [walletConnected, setWalletConnected] = useState(false);
   // presaleStarted keeps track of whether the presale has started or not
@@ -182,12 +183,13 @@ export default function Home() {
       // We will get the signer now to extract the address of the currently connected MetaMask account
       const signer = await getProviderOrSigner(true);
       // Get the address associated to the signer which is connected to  MetaMask
+      // @ts-ignore
       const address = await signer.getAddress();
       if (address.toLowerCase() === _owner.toLowerCase()) {
         setIsOwner(true);
       }
     } catch (err) {
-      console.error(err.message);
+      console.error(err);
     }
   };
 
@@ -226,6 +228,7 @@ export default function Home() {
   const getProviderOrSigner = async (needSigner = false) => {
     // Connect to Metamask
     // Since we store `web3Modal` as a reference, we need to access the `current` value to get access to the underlying object
+    // @ts-ignore
     const provider = await web3ModalRef.current.connect();
     const web3Provider = new providers.Web3Provider(provider);
 
@@ -251,6 +254,7 @@ export default function Home() {
     if (!walletConnected) {
       // Assign the Web3Modal class to the reference object by setting it's `current` value
       // The `current` value is persisted throughout as long as this page is open
+      // @ts-ignore
       web3ModalRef.current = new Web3Modal({
         network: "rinkeby",
         providerOptions: {},
@@ -259,10 +263,12 @@ export default function Home() {
       connectWallet();
 
       // Check if presale has started and ended
-      const _presaleStarted = checkIfPresaleStarted();
-      if (_presaleStarted) {
-        checkIfPresaleEnded();
-      }
+      async () => {
+        const _presaleStarted = await checkIfPresaleStarted();
+        if (_presaleStarted) {
+          checkIfPresaleEnded();
+        }
+      };
 
       getTokenIdsMinted();
 
@@ -282,6 +288,7 @@ export default function Home() {
         await getTokenIdsMinted();
       }, 5 * 1000);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletConnected]);
 
   /*
@@ -364,7 +371,12 @@ export default function Home() {
           {renderButton()}
         </div>
         <div>
-          <img className={styles.image} src="./cryptodevs/0.svg" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt="nft-logo"
+            className={styles.image}
+            src="./cryptodevs/0.svg"
+          />
         </div>
       </div>
 
@@ -373,4 +385,6 @@ export default function Home() {
       </footer>
     </div>
   );
-}
+};
+
+export default Home;
